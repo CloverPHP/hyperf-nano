@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 /**
- * This file is part of Hyperf.
+ * This file is part of Hyperf Nano.
  *
  * @link     https://www.hyperf.io
- * @document https://doc.hyperf.io
+ * @document https://nano.hyperf.wiki
  * @contact  group@hyperf.io
- * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
+ * @license  https://github.com/hyperf/nano/blob/master/LICENSE
  */
 namespace Hyperf\Nano;
 
@@ -19,15 +19,29 @@ use Hyperf\Nano\Factory\AppFactory;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-class Foo
+interface FooInterface
 {
-    public function bar()
+    public function bar(): string;
+}
+
+class Foo implements FooInterface
+{
+    public function bar(): string
     {
         return 'bar';
     }
 }
 
-$app = AppFactory::createBase();
+$app = AppFactory::createBase('0.0.0.0', 9501, [
+    FooInterface::class => Foo::class,
+]);
+$app->config([
+    'server' => [
+        'settings' => [
+            'daemonize' => (int) env('DAEMONIZE', 0),
+        ],
+    ],
+]);
 
 $app->get('/', function () {
     $user = $this->request->input('user', 'nano');
@@ -51,6 +65,11 @@ $app->get('/di', function () {
     /** @var ContainerProxy $this */
     $foo = $this->get(Foo::class);
     return $foo->bar();
+});
+
+$app->get('/foo', function () {
+    /* @var ContainerProxy $this */
+    return $this->get(FooInterface::class)->bar();
 });
 
 $app->get('/middleware', function () {

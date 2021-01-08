@@ -13,25 +13,32 @@
             "Hyperf\\Nano\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "HyperfTest\\Nano\\": "tests/"
+        }
+    },
     "require": {
-        "php": ">=7.2",
+        "php": ">=7.3",
         "ext-swoole": ">=4.5",
-        "hyperf/command": "~2.0.0",
-        "hyperf/config": "~2.0.0",
-        "hyperf/di": "~2.0.0",
-        "hyperf/framework": "~2.0.0",
-        "hyperf/http-server": "~2.0.0",
-        "hyperf/utils": "~2.0.0"
+        "hyperf/command": "^2.0.0",
+        "hyperf/config": "^2.0.0",
+        "hyperf/di": "^2.0.0",
+        "hyperf/framework": "^2.0.0",
+        "hyperf/http-server": "^2.0.0",
+        "hyperf/utils": "^2.0.0"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^2.14",
-        "hyperf/crontab": "~2.0.0",
-        "hyperf/db": "~2.0.0",
-        "hyperf/process": "~2.0.0",
-        "hyperf/testing": "~2.0.0",
+        "hyperf/crontab": "^2.0.0",
+        "hyperf/db": "^2.0.0",
+        "hyperf/guzzle": "^2.0.0",
+        "hyperf/process": "^2.0.0",
+        "hyperf/testing": "^2.0.0",
         "phpstan/phpstan": "^0.12",
-        "symfony/finder": "^4.0|^5.0",
-        "swoole/ide-helper": "^4.5.2"
+        "phpunit/phpunit": "^7.0",
+        "swoole/ide-helper": "^4.5.2",
+        "symfony/finder": "^4.0|^5.0"
     },
     "suggest": {
         "hyperf/crontab": "Required to use closure crontab",
@@ -42,12 +49,12 @@
     },
     "scripts": {
         "test": "co-phpunit -c phpunit.xml --colors=always",
-        "analyse": "phpstan analyse --memory-limit 300M -l 5 ./src",
+        "analyse": "phpstan analyse --memory-limit 4096M -l 5 -c phpstan.neon",
         "cs-fix": "php-cs-fixer fix $1"
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "1.1-dev"
+            "dev-master": "1.0-dev"
         },
         "hyperf": {
             "config": "Hyperf\\Nano\\ConfigProvider"

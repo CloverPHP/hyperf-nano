@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 /**
- * This file is part of Hyperf.
+ * This file is part of Hyperf Nano.
  *
  * @link     https://www.hyperf.io
- * @document https://doc.hyperf.io
+ * @document https://nano.hyperf.wiki
  * @contact  group@hyperf.io
- * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
+ * @license  https://github.com/hyperf/nano/blob/master/LICENSE
  */
 namespace Hyperf\Nano\Factory;
 
@@ -18,7 +18,7 @@ use Hyperf\Contract\ContainerInterface;
 use Hyperf\Contract\StdoutLoggerInterface;
 use Hyperf\Di\Container;
 use Hyperf\Di\Definition\DefinitionSource;
-use Hyperf\Di\Definition\ScanConfig;
+use Hyperf\HttpServer\Exception\Handler\HttpExceptionHandler;
 use Hyperf\HttpServer\Router\DispatcherFactory;
 use Hyperf\Nano\App;
 use Hyperf\Nano\BoundInterface;
@@ -32,32 +32,48 @@ class AppFactory
     /**
      * Create an application.
      */
-    public static function create(string $host = '0.0.0.0', int $port = 9501): App
+    public static function create(string $host = '0.0.0.0', int $port = 9501, array $dependencies = []): App
     {
-        $app = self::createApp();
+        $app = self::createApp($dependencies);
         $app->config([
             'server' => Preset::default(),
             'server.servers.0.host' => $host,
             'server.servers.0.port' => $port,
         ]);
+        $app->addExceptionHandler(HttpExceptionHandler::class);
         return $app;
     }
 
     /**
      * Create a single worker application in base mode, with max_requests = 0.
      */
-    public static function createBase(string $host = '0.0.0.0', int $port = 9501): App
+    public static function createBase(string $host = '0.0.0.0', int $port = 9501, array $dependencies = []): App
     {
-        $app = self::createApp();
+        $app = self::createApp($dependencies);
         $app->config([
             'server' => Preset::base(),
             'server.servers.0.host' => $host,
             'server.servers.0.port' => $port,
         ]);
+        $app->addExceptionHandler(HttpExceptionHandler::class);
         return $app;
     }
 
-    protected static function prepareContainer(): ContainerInterface
+    /**
+     * Create an application with a chosen preset.
+     */
+    public static function createApp(array $dependencies = []): App
+    {
+        // Setting ini and flags
+        self::prepareFlags();
+
+        // Prepare container
+        $container = self::prepareContainer($dependencies);
+
+        return new App($container);
+    }
+
+    protected static function prepareContainer(array $dependencies = []): ContainerInterface
     {
         $config = new Config(ProviderConfig::load());
         $config->set(StdoutLoggerInterface::class, [
@@ -72,7 +88,8 @@ class AppFactory
                 LogLevel::WARNING,
             ],
         ]);
-        $container = new Container(new DefinitionSource($config->get('dependencies'), new ScanConfig()));
+        $dependencies = array_merge($config->get('dependencies', []), $dependencies);
+        $container = new Container(new DefinitionSource($dependencies));
         $container->set(ConfigInterface::class, $config);
         $container->define(DispatcherFactory::class, DispatcherFactory::class);
         $container->define(BoundInterface::class, ContainerProxy::class);
@@ -93,19 +110,5 @@ class AppFactory
         $projectRootPath = dirname($reflection->getFileName(), 3);
         ! defined('BASE_PATH') && define('BASE_PATH', $projectRootPath);
         ! defined('SWOOLE_HOOK_FLAGS') && define('SWOOLE_HOOK_FLAGS', $hookFlags);
-    }
-
-    /**
-     * Create an application with a chosen preset.
-     */
-    protected static function createApp(): App
-    {
-        // Setting ini and flags
-        self::prepareFlags();
-
-        // Prepare container
-        $container = self::prepareContainer();
-
-        return new App($container);
     }
 }
